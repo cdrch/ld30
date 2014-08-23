@@ -1,8 +1,8 @@
 
-BasicGame.MainMenu = function (game) {
+LawChaosGame.MainMenu = function (game) {
 };
 
-BasicGame.MainMenu.prototype = {
+LawChaosGame.MainMenu.prototype = {
 
 	create: function () {
 
@@ -13,13 +13,18 @@ BasicGame.MainMenu.prototype = {
 	update: function () {
 
 		//	Do some nice funky main menu effect here
+		if (this.input.keyboard.isDown(Phaser.Keyboard.X))
+		{
+			this.startGame();
+		}
+		if (this.input.keyboard.isDown(Phaser.Keyboard.W))
+		{
+			this.add.sprite(0, 0, 'player');
+		}
 
 	},
 
 	render: function () {
-
-		//  Every loop we need to render the un-scaled game canvas to the displayed scaled canvas:
-	    BasicGame.pixel.context.drawImage(this.game.canvas, 0, 0, this.game.width, this.game.height, 0, 0, BasicGame.pixel.width, BasicGame.pixel.height);
 
 	},
 

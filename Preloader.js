@@ -1,13 +1,16 @@
 
-BasicGame.Preloader = function (game) {
+LawChaosGame.Preloader = function (game) {
 
 };
 
-BasicGame.Preloader.prototype = {
+LawChaosGame.Preloader.prototype = {
 
 	preload: function () {
 
 		this.load.image('titlepage', 'kof.png');
+		this.load.tilemap('map1', 'assets/testmap1.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.image('test-tiles', 'assets/test-tileset.png');
+		this.load.image('player', 'assets/testplayer.png');
 
 	},
 
@@ -18,9 +21,6 @@ BasicGame.Preloader.prototype = {
 	},
 
 	render: function () {
-
-		//  Every loop we need to render the un-scaled game canvas to the displayed scaled canvas:
-	    BasicGame.pixel.context.drawImage(this.game.canvas, 0, 0, this.game.width, this.game.height, 0, 0, BasicGame.pixel.width, BasicGame.pixel.height);
 
 	},
 

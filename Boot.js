@@ -1,34 +1,15 @@
-var BasicGame = {
+var LawChaosGame = {
 
-    pixel: { scale: 4, canvas: null, context: null, width: 0, height: 0 }
+    // pixel: { scale: 4, canvas: null, context: null, width: 0, height: 0 }
 
 };
 
-BasicGame.Boot = function (game) {
+LawChaosGame.Boot = function (game) {
 };
 
-BasicGame.Boot.prototype = {
+LawChaosGame.Boot.prototype = {
 
     init: function () {
-
-        //  Hide the un-scaled game canvas
-        this.game.canvas.style['display'] = 'none';
-     
-        //  Create our scaled canvas. It will be the size of the game * whatever scale value you've set
-        BasicGame.pixel.canvas = Phaser.Canvas.create(this.game.width * BasicGame.pixel.scale, this.game.height * BasicGame.pixel.scale);
-     
-        //  Store a reference to the Canvas Context
-        BasicGame.pixel.context = BasicGame.pixel.canvas.getContext('2d');
-     
-        //  Add the scaled canvas to the DOM
-        Phaser.Canvas.addToDOM(BasicGame.pixel.canvas);
-     
-        //  Disable smoothing on the scaled canvas
-        Phaser.Canvas.setSmoothingEnabled(BasicGame.pixel.context, false);
-     
-        //  Cache the width/height to avoid looking it up every render
-        BasicGame.pixel.width = BasicGame.pixel.canvas.width;
-        BasicGame.pixel.height = BasicGame.pixel.canvas.height;
 
     },
 
