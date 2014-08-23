@@ -39,16 +39,16 @@ LawChaosGame.Game.prototype = {
 
     this.stage.backgroundColor = '#000000';
 
-    map = this.add.tilemap('map3');
+    map = this.add.tilemap('map2');
 
     map.addTilesetImage('test-tileset', 'test-tiles');
-
-    map.setCollisionBetween(3, 4);
-    map.setCollision(1);
     
     layer2 = map.createLayer('Tile Layer 2');
     
     layer = map.createLayer('Tile Layer 1');
+    
+    map.setCollisionBetween(3, 4, true, layer);
+    map.setCollision(1, true, layer);
     
     // map.collisionLayer = layer;
 
@@ -73,7 +73,7 @@ LawChaosGame.Game.prototype = {
 	},
 
 	update: function () {
-	  this.physics.arcade.collide(this.player, layer);
+	  this.game.physics.arcade.collide(this.player, layer);
 
     // if (cursors.up.isDown)
     // {
