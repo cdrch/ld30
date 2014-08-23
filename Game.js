@@ -28,6 +28,7 @@ LawChaosGame.Game = function (game) {
 var map;
 var tileset;
 var layer;
+var layer2;
 var cursors;
 
 LawChaosGame.Game.prototype = {
@@ -38,14 +39,18 @@ LawChaosGame.Game.prototype = {
 
     this.stage.backgroundColor = '#000000';
 
-    map = this.add.tilemap('map1');
+    map = this.add.tilemap('map3');
 
     map.addTilesetImage('test-tileset', 'test-tiles');
 
     map.setCollisionBetween(3, 4);
     map.setCollision(1);
     
+    layer2 = map.createLayer('Tile Layer 2');
+    
     layer = map.createLayer('Tile Layer 1');
+    
+    // map.collisionLayer = layer;
 
     //  Un-comment this on to see the collision tiles
     // layer.debug = true;
@@ -58,6 +63,12 @@ LawChaosGame.Game.prototype = {
 
     // cursors = this.input.keyboard.createCursorKeys();
 		
+		//  Here we create our coins group
+    this.orbs = this.add.group();
+    this.orbs.enableBody = true;
+
+    //  And now we convert all of the Tiled objects with an ID of 34 into sprites within the coins group
+    // map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
 
 	},
 
@@ -117,6 +128,7 @@ LawChaosGame.Game.prototype = {
     if (!this.upInputIsActive()) {
         this.canVariableJump = false;
     }
+    
 	},
 	
 	// CREATE FUNCTIONS
