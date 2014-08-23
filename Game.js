@@ -28,7 +28,6 @@ LawChaosGame.Game = function (game) {
 var map;
 var tileset;
 var layer;
-var p;
 var cursors;
 
 LawChaosGame.Game.prototype = {
@@ -37,7 +36,7 @@ LawChaosGame.Game.prototype = {
 
 		this.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.stage.backgroundColor = '#787878';
+    this.stage.backgroundColor = '#000000';
 
     map = this.add.tilemap('map1');
 
@@ -53,44 +52,141 @@ LawChaosGame.Game.prototype = {
 
     layer.resizeWorld();
 
-    p = this.add.sprite(64, 64, 'player');
+    this.setupPlayer();
 
-    this.physics.enable(p);
+    this.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
 
-    this.physics.arcade.gravity.y = 250;
-
-    p.body.bounce.y = 0.2;
-    p.body.linearDamping = 1;
-    p.body.collideWorldBounds = true;
-
-    this.camera.follow(p);
-
-    cursors = this.input.keyboard.createCursorKeys();
+    // cursors = this.input.keyboard.createCursorKeys();
 		
 
 	},
 
 	update: function () {
-	  this.physics.arcade.collide(p, layer);
+	  this.physics.arcade.collide(this.player, layer);
 
-    p.body.velocity.x = 0;
+    // if (cursors.up.isDown)
+    // {
+    //     if (this.player.body.onFloor())
+    //     {
+    //         this.player.body.velocity.y = -200;
+    //     }
+    // }
 
-    if (cursors.up.isDown)
-    {
-        if (p.body.onFloor())
-        {
-            p.body.velocity.y = -200;
+    // if (cursors.left.isDown)
+    // {
+    //     this.player.body.velocity.x = -150;
+    // }
+    // else if (cursors.right.isDown)
+    // {
+    //     this.player.body.velocity.x = 150;
+    // }
+    if (this.leftInputIsActive()) {
+        // If the LEFT key is down, set the player velocity to move left
+        this.player.body.acceleration.x = -this.ACCELERATION;
+    } else if (this.rightInputIsActive()) {
+        // If the RIGHT key is down, set the player velocity to move right
+        this.player.body.acceleration.x = this.ACCELERATION;
+    } else {
+        this.player.body.acceleration.x = 0;
+    }
+    
+    // Set a variable that is true when the player is touching the ground
+    // var onTheGround = this.player.body.touching.down;
+    var onTheGround = this.player.body.onFloor();
+    if (onTheGround) { this.canDoubleJump = true; }
+
+    if (this.upInputIsActive(5)) {
+        // Allow the player to adjust his jump height by holding the jump button
+        if (this.canDoubleJump) { this.canVariableJump = true; }
+
+        if (this.canDoubleJump || onTheGround) {
+            // Jump when the player is touching the ground or they can double jump
+            this.player.body.velocity.y = this.JUMP_SPEED;
+
+            // Disable ability to double jump if the player is jumping in the air
+            if (!onTheGround) { this.canDoubleJump = false; }
         }
     }
 
-    if (cursors.left.isDown)
-    {
-        p.body.velocity.x = -150;
+    // Keep y velocity constant while the jump button is held for up to 150 ms
+    if (this.canVariableJump && this.upInputIsActive(150)) {
+        this.player.body.velocity.y = this.JUMP_SPEED;
     }
-    else if (cursors.right.isDown)
-    {
-        p.body.velocity.x = 150;
+
+    // Don't allow variable jump height after the jump button is released
+    if (!this.upInputIsActive()) {
+        this.canVariableJump = false;
     }
+	},
+	
+	// CREATE FUNCTIONS
+	
+	setupPlayer: function() {
+	  
+	  // Define movement constants
+    this.MAX_SPEED = 500; // pixels/second
+    this.ACCELERATION = 1500; // pixels/second/second
+    this.DRAG = 600; // pixels/second
+    this.GRAVITY = 1000; // pixels/second/second
+    this.JUMP_SPEED = -350; // pixels/second (negative y is up)
+    
+	  this.player = this.add.sprite(64, 64, 'player');
+
+    this.physics.enable(this.player);
+
+    this.physics.arcade.gravity.y = this.GRAVITY;
+
+    // this.player.body.bounce.y = 0.2;
+    // this.player.body.linearDamping = 1;
+    this.player.body.collideWorldBounds = true;
+    
+    // Set player minimum and maximum movement speed
+    this.player.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED * 10); // x, y
+
+    // Add drag to the player that slows them down when they are not accelerating
+    this.player.body.drag.setTo(this.DRAG, 0); // x, y
+    
+    // Set a flag for tracking if we've double jumped
+    this.canDoubleJump = true;
+
+    // Set a flag for tracking if the player can adjust their jump height
+    this.canVariableJump = true;
+    
+    
+	},
+	
+	// UPDATE FUNCTIONS
+	
+	// CONTROL FUNCTIONS
+	leftInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.LEFT);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x < this.game.width/4);
+
+    return isActive;
+	},
+	
+	rightInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.RIGHT);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+    return isActive;
+	},
+	
+	upInputIsActive: function (duration) {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.justPressed(Phaser.Keyboard.UP, duration);
+    // isActive |= (this.game.input.activePointer.justPressed(duration + 1000/60) &&
+    //     this.game.input.activePointer.x > this.game.width/4 &&
+    //     this.game.input.activePointer.x < this.game.width/2 + this.game.width/4);
+
+    return isActive;
 	},
 	
 	quitGame: function (pointer) {
