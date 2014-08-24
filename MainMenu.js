@@ -1,8 +1,8 @@
 
-LawChaosGame.MainMenu = function (game) {
+BalanceGame.MainMenu = function (game) {
 };
 
-LawChaosGame.MainMenu.prototype = {
+BalanceGame.MainMenu.prototype = {
 
 	create: function () {
 
@@ -47,8 +47,7 @@ LawChaosGame.MainMenu.prototype = {
 
 	startGame: function (pointer) {
 
-		//	And start the actual game
-		this.state.start('Game');
+		this.state.start('LevelManager');
 
 	}
 

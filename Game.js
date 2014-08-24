@@ -1,5 +1,5 @@
 
-LawChaosGame.Game = function (game) {
+BalanceGame.Game = function (game) {
 
 	//	When a State is added to Phaser it automatically has the following properties set on it, even if they already exist:
 
@@ -22,16 +22,11 @@ LawChaosGame.Game = function (game) {
 
     //	You can use any of these from any function within this State.
     //	But do consider them as being 'reserved words', i.e. don't create a property for your own game called "world" or you'll over-write the world reference.
+    
 
 };
 
-var map;
-var tileset;
-var layer;
-var layer2;
-var cursors;
-
-LawChaosGame.Game.prototype = {
+BalanceGame.Game.prototype = {
 
 	create: function () {
 
@@ -39,59 +34,144 @@ LawChaosGame.Game.prototype = {
 
     this.stage.backgroundColor = '#000000';
 
-    map = this.add.tilemap('map2');
+    this.map = this.add.tilemap(BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel]);
 
-    map.addTilesetImage('test-tileset', 'test-tiles');
+    this.map.addTilesetImage('test-tileset', 'test-tiles');
     
-    layer2 = map.createLayer('Tile Layer 2');
+    this.setupBackgroundLayers();
     
-    layer = map.createLayer('Tile Layer 1');
-    
-    map.setCollisionBetween(3, 4, true, layer);
-    map.setCollision(1, true, layer);
-    
-    // map.collisionLayer = layer;
+    this.setupCollisionLayer();
 
     //  Un-comment this on to see the collision tiles
     // layer.debug = true;
 
-    layer.resizeWorld();
-
-    this.setupPlayer();
-
-    this.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
-
-    // cursors = this.input.keyboard.createCursorKeys();
+    this.layerC.resizeWorld();
+    
+    this.doors = this.add.group();
+    this.doors.enableBody = true;
+    this.doors.setAll('anchor.x', 0);
+    this.doors.setAll('anchor.y', 1);
+    
+    this.map.createFromObjects('Object Layer 1', 33, 'door1', 0, true, false, this.doors);
 		
 		//  Here we create our coins group
     this.orbs = this.add.group();
     this.orbs.enableBody = true;
-
-    //  And now we convert all of the Tiled objects with an ID of 34 into sprites within the coins group
-    // map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
-
+    
+    this.map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
+    
+    this.setupPlayer();
+    
+    this.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
+    
+    this.setupForegroundLayers();
+    
+    this.clouds = this.add.group();
+    this.clouds.enableBody = true;
+    this.clouds.physicsBodyType = Phaser.Physics.ARCADE;
+    
+    this.clouds.createMultiple(50, 'cloud1');
+    this.clouds.setAll('anchor.x', 0.5);
+    this.clouds.setAll('anchor.y', 0.5);
+    this.clouds.setAll('outOfBoundsKill', true);
+    this.clouds.setAll('checkWorldBounds', true);
+    
+    // This triggers the clouds
+    // this.time.events.repeat(Phaser.Timer.SECOND * 3, 10, this.addCloud, this);
+    
+    this.drawGUI();
+    
+    
 	},
 
 	update: function () {
-	  this.game.physics.arcade.collide(this.player, layer);
+	  this.game.physics.arcade.collide(this.player, this.layerC);
+	  this.game.physics.arcade.collide(this.orbs, this.layerC);
+	  this.game.physics.arcade.collide(this.doors, this.layerC);
+	  this.game.physics.arcade.overlap(this.player, this.orbs, this.collectOrb, null, this);
+	  this.game.physics.arcade.overlap(this.player, this.doors, this.finishLevel, null, this);
+	 //this.game.physics.arcade.collide(this.player, this.doors);
+    
+    this.movePlayer();
+    
+    if (BalanceGame.playerInfo.health === 0)
+    {
+      this.quitGame();
+    }
+    
+    if (this.input.keyboard.isDown(Phaser.Keyboard.L))
+		{
+			this.finishLevel();
+		}
+		
+		if (this.input.keyboard.isDown(Phaser.Keyboard.K))
+		{
+		// 	this.gui.x -= 10000;
+		}
+		
+		if (this.input.keyboard.isDown((Phaser.Keyboard.A)))
+		{
+		  if (BalanceGame.playerInfo.health > 0)
+		  {
+		    BalanceGame.playerInfo.health -= 1;
+		  }
+		}
+		
+		this.updateGUI();
+	},
+	
+	// CREATE FUNCTIONS
+	
+	setupPlayer: function() {
+	  
+	  // Define movement constants
+    this.MAX_SPEED = 500; // pixels/second
+    this.ACCELERATION = 1500; // pixels/second/second
+    this.DRAG = 1000; // pixels/second
+    this.GRAVITY = 1000; // pixels/second/second
+    this.JUMP_SPEED = -350; // pixels/second (remember negative y is up)
+    
+	  this.player = this.add.sprite(64, 64, 'player');
 
-    // if (cursors.up.isDown)
-    // {
-    //     if (this.player.body.onFloor())
-    //     {
-    //         this.player.body.velocity.y = -200;
-    //     }
-    // }
+    this.physics.enable(this.player);
 
-    // if (cursors.left.isDown)
-    // {
-    //     this.player.body.velocity.x = -150;
-    // }
-    // else if (cursors.right.isDown)
-    // {
-    //     this.player.body.velocity.x = 150;
-    // }
-    if (this.leftInputIsActive()) {
+    this.physics.arcade.gravity.y = this.GRAVITY;
+
+    // this.player.body.bounce.y = 0.2;
+    // this.player.body.linearDamping = 1;
+    this.player.body.collideWorldBounds = true;
+    
+    // Set player minimum and maximum movement speed to increase control and lower collision errors
+    this.player.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED * 10); // x, y
+
+    // Add drag to the player that slows them down when they are not accelerating
+    this.player.body.drag.setTo(this.DRAG, 0); // x, y
+    
+    this.canDoubleJump = true;
+    this.canVariableJump = true;
+	},
+	
+	setupBackgroundLayers: function () {
+	  this.layerB2 = this.map.createLayer('Background2');
+    this.layerB1 = this.map.createLayer('Background1');
+	},
+	
+	setupCollisionLayer: function () {
+	  this.layerC = this.map.createLayer('Collision');
+    this.map.setCollisionBetween(3, 4, true, this.layerC);
+    this.map.setCollision(1, true, this.layerC);
+    this.map.setCollision(9, true, this.layerC);
+	},
+	
+	setupForegroundLayers: function () {
+	  this.layerF1 = this.map.createLayer('Foreground1');
+    this.layerF2 = this.map.createLayer('Foreground2');
+	},
+	
+	// UPDATE FUNCTIONS
+	
+	movePlayer: function () {
+	  if (this.leftInputIsActive()) {
         // If the LEFT key is down, set the player velocity to move left
         this.player.body.acceleration.x = -this.ACCELERATION;
     } else if (this.rightInputIsActive()) {
@@ -128,46 +208,251 @@ LawChaosGame.Game.prototype = {
     if (!this.upInputIsActive()) {
         this.canVariableJump = false;
     }
-    
 	},
 	
-	// CREATE FUNCTIONS
+	collectOrb: function (player, orb) {
+	  BalanceGame.playerInfo.maxWood++;
+	  BalanceGame.playerInfo.wood++;
+	 // this.woodOrb.scale.setTo(0.5,0.5);
+	  orb.destroy();
+	},
 	
-	setupPlayer: function() {
+	// GUI FUNCTIONS
+	
+	drawGUI: function() {
+	  this.gui = this.add.group();
+	  this.guiBackOrbs = this.add.group();
+	  for (var i = 0; i < 5; i++)
+	  {
+	    var b = this.add.sprite(((i + 1) * 256) - 128, 585, 'guiCircle00');
+	   // b.anchor.x = 0.5;
+	   // b.anchor.y = 0.5;
+	    this.guiBackOrbs.add(b);
+	  }
 	  
-	  // Define movement constants
-    this.MAX_SPEED = 500; // pixels/second
-    this.ACCELERATION = 1500; // pixels/second/second
-    this.DRAG = 600; // pixels/second
-    this.GRAVITY = 1000; // pixels/second/second
-    this.JUMP_SPEED = -350; // pixels/second (negative y is up)
+	  this.guiOrbs = this.add.group();
+	 
+	  // TODO: simplify these numbers
+	  this.woodOrb = this.add.sprite(((0 + 1) * 256) - 128, 585, 'guiCircleWood');
+	  this.fireOrb = this.add.sprite(((1 + 1) * 256) - 128, 585, 'guiCircleFire');
+	  this.earthOrb = this.add.sprite(((2 + 1) * 256) - 128, 585, 'guiCircleEarth');
+	  this.metalOrb = this.add.sprite(((3 + 1) * 256) - 128, 585, 'guiCircleMetal');
+	  this.waterOrb = this.add.sprite(((4 + 1) * 256) - 128, 585, 'guiCircleWater');
+	  
+	  this.guiOrbs.add(this.woodOrb);
+	  this.guiOrbs.add(this.fireOrb);
+	  this.guiOrbs.add(this.earthOrb);
+	  this.guiOrbs.add(this.metalOrb);
+	  this.guiOrbs.add(this.waterOrb);
+	  
+	  this.healthBar = this.add.sprite(640, 16, 'healthBar');
+	  this.healthBar.anchor.setTo(0.5, 0.5);
+	  
+	  this.gui.add(this.healthBar);
+	  this.gui.add(this.guiBackOrbs);
+	  this.gui.add(this.guiOrbs);
+	  
+	  this.guiBackOrbs.setAll('anchor.x', 0.5);
+	  this.guiBackOrbs.setAll('anchor.y', 0.5);
+	  this.guiOrbs.setAll('anchor.x', 0.5);
+	  this.guiOrbs.setAll('anchor.y', 0.5);
+	  this.gui.fixedToCamera = true;
+	  
+	  var style = { font: "65px Arial", fill: "#000000", align: "center" };
+	  
+    this.woodOrb.text = this.add.text(this.woodOrb.x, this.woodOrb.y, "", style);
+    this.woodOrb.text.anchor.set(0.5);
+    this.woodOrb.text.fixedToCamera = true;
     
-	  this.player = this.add.sprite(64, 64, 'player');
-
-    this.physics.enable(this.player);
-
-    this.physics.arcade.gravity.y = this.GRAVITY;
-
-    // this.player.body.bounce.y = 0.2;
-    // this.player.body.linearDamping = 1;
-    this.player.body.collideWorldBounds = true;
+    this.fireOrb.text = this.add.text(this.fireOrb.x, this.fireOrb.y, "", style);
+    this.fireOrb.text.anchor.set(0.5);
+    this.fireOrb.text.fixedToCamera = true;
     
-    // Set player minimum and maximum movement speed
-    this.player.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED * 10); // x, y
-
-    // Add drag to the player that slows them down when they are not accelerating
-    this.player.body.drag.setTo(this.DRAG, 0); // x, y
+    this.earthOrb.text = this.add.text(this.earthOrb.x, this.earthOrb.y, "", style);
+    this.earthOrb.text.anchor.set(0.5);
+    this.earthOrb.text.fixedToCamera = true;
     
-    // Set a flag for tracking if we've double jumped
-    this.canDoubleJump = true;
-
-    // Set a flag for tracking if the player can adjust their jump height
-    this.canVariableJump = true;
+    this.metalOrb.text = this.add.text(this.metalOrb.x, this.metalOrb.y, "", style);
+    this.metalOrb.text.anchor.set(0.5);
+    this.metalOrb.text.fixedToCamera = true;
+    
+    this.waterOrb.text = this.add.text(this.waterOrb.x, this.waterOrb.y, "", style);
+    this.waterOrb.text.anchor.set(0.5);
+    this.waterOrb.text.fixedToCamera = true;
+	  
+	  
+	 // this.graphics = this.add.graphics(0, 0);
+    
+  //   // health
+  //   this.graphics.beginFill(0x00FF00);
+  //   this.graphics.lineStyle(1, 0x000000, 1);
+  //   this.graphics.drawRect(32, 16, 1216, 20);
     
     
+  //   this.graphics.fixedToCamera = true;
 	},
 	
-	// UPDATE FUNCTIONS
+	updateGUI: function () {
+	  // wood gui update
+	  if (BalanceGame.playerInfo.maxWood <= 0)
+	  {
+	    this.woodOrb.scale.setTo(0, 0);
+	  } else {
+	    this.woodOrb.scale.setTo(
+	    BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood, 
+	    BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood
+	    );
+	    if (BalanceGame.playerInfo.currentWoodSpell === 1)
+	    {
+	      this.woodOrb.text.text = 'I';
+	    }
+	    else if (BalanceGame.playerInfo.currentWoodSpell === 2)
+	    {
+	      this.woodOrb.text.text = 'II';
+	    }
+	    else if (BalanceGame.playerInfo.currentWoodSpell === 3)
+	    {
+	      this.woodOrb.text.text = 'III';
+	    }
+	    else if (BalanceGame.playerInfo.currentWoodSpell === 4)
+	    {
+	      this.woodOrb.text.text = 'IV';
+	    }
+	    else if (BalanceGame.playerInfo.currentWoodSpell === 5)
+	    {
+	      this.woodOrb.text.text = 'V';
+	    }
+	  }
+		
+		// fire gui update
+	  if (BalanceGame.playerInfo.maxfire <= 0)
+	  {
+	    this.fireOrb.scale.setTo(0, 0);
+	  } else {
+	    this.fireOrb.scale.setTo(
+	    BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire, 
+	    BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire
+	    );
+	    if (BalanceGame.playerInfo.currentFireSpell === 1)
+	    {
+	      this.fireOrb.text.text = 'I';
+	    }
+	    else if (BalanceGame.playerInfo.currentFireSpell === 2)
+	    {
+	      this.fireOrb.text.text = 'II';
+	    }
+	    else if (BalanceGame.playerInfo.currentFireSpell === 3)
+	    {
+	      this.fireOrb.text.text = 'III';
+	    }
+	    else if (BalanceGame.playerInfo.currentFireSpell === 4)
+	    {
+	      this.fireOrb.text.text = 'IV';
+	    }
+	    else if (BalanceGame.playerInfo.currentFireSpell === 5)
+	    {
+	      this.fireOrb.text.text = 'V';
+	    }
+	  }
+		
+		// earth gui update
+	  if (BalanceGame.playerInfo.maxearth <= 0)
+	  {
+	    this.earthOrb.scale.setTo(0, 0);
+	  } else {
+	    this.earthOrb.scale.setTo(
+	    BalanceGame.playerInfo.earth/BalanceGame.playerInfo.maxEarth, 
+	    BalanceGame.playerInfo.earth/BalanceGame.playerInfo.maxEarth
+	    );
+	    if (BalanceGame.playerInfo.currentEarthSpell === 1)
+	    {
+	      this.earthOrb.text.text = 'I';
+	    }
+	    else if (BalanceGame.playerInfo.currentEarthSpell === 2)
+	    {
+	      this.earthOrb.text.text = 'II';
+	    }
+	    else if (BalanceGame.playerInfo.currentEarthSpell === 3)
+	    {
+	      this.earthOrb.text.text = 'III';
+	    }
+	    else if (BalanceGame.playerInfo.currentEarthSpell === 4)
+	    {
+	      this.earthOrb.text.text = 'IV';
+	    }
+	    else if (BalanceGame.playerInfo.currentEarthSpell === 5)
+	    {
+	      this.earthOrb.text.text = 'V';
+	    }
+	  }
+		
+		// metal gui update
+	  if (BalanceGame.playerInfo.maxmetal <= 0)
+	  {
+	    this.metalOrb.scale.setTo(0, 0);
+	  } else {
+	    this.metalOrb.scale.setTo(
+	    BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal, 
+	    BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal
+	    );
+	    if (BalanceGame.playerInfo.currentMetalSpell === 1)
+	    {
+	      this.metalOrb.text.text = 'I';
+	    }
+	    else if (BalanceGame.playerInfo.currentMetalSpell === 2)
+	    {
+	      this.metalOrb.text.text = 'II';
+	    }
+	    else if (BalanceGame.playerInfo.currentMetalSpell === 3)
+	    {
+	      this.metalOrb.text.text = 'III';
+	    }
+	    else if (BalanceGame.playerInfo.currentMetalSpell === 4)
+	    {
+	      this.metalOrb.text.text = 'IV';
+	    }
+	    else if (BalanceGame.playerInfo.currentMetalSpell === 5)
+	    {
+	      this.metalOrb.text.text = 'V';
+	    }
+	  }
+		
+		// water gui update
+	  if (BalanceGame.playerInfo.maxwater <= 0)
+	  {
+	    this.waterOrb.scale.setTo(0, 0);
+	  } else {
+	    this.waterOrb.scale.setTo(
+	    BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater, 
+	    BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater
+	    );
+	    if (BalanceGame.playerInfo.currentWaterSpell === 1)
+	    {
+	      this.waterOrb.text.text = 'I';
+	    }
+	    else if (BalanceGame.playerInfo.currentWaterSpell === 2)
+	    {
+	      this.waterOrb.text.text = 'II';
+	    }
+	    else if (BalanceGame.playerInfo.currentWaterSpell === 3)
+	    {
+	      this.waterOrb.text.text = 'III';
+	    }
+	    else if (BalanceGame.playerInfo.currentWaterSpell === 4)
+	    {
+	      this.waterOrb.text.text = 'IV';
+	    }
+	    else if (BalanceGame.playerInfo.currentWaterSpell === 5)
+	    {
+	      this.waterOrb.text.text = 'V';
+	    }
+	  }
+	  
+	  this.healthBar.scale.setTo(
+	    BalanceGame.playerInfo.health/BalanceGame.playerInfo.maxHealth, 1);
+	    
+	  
+	},
 	
 	// CONTROL FUNCTIONS
 	leftInputIsActive: function () {
@@ -199,6 +484,50 @@ LawChaosGame.Game.prototype = {
     //     this.game.input.activePointer.x < this.game.width/2 + this.game.width/4);
 
     return isActive;
+	},
+	
+	downInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.DOWN);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+    return isActive;
+	},
+	
+	selectInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.SPACE);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+    return isActive;
+	},
+	
+	// WEATHER FUNCTIONS
+	
+	addCloud: function () {
+	  if (this.clouds.countDead() === 0)
+	  {
+	    return;
+	  }
+	  
+	  var cloud = this.clouds.getFirstExists(false);
+	  
+	  cloud.reset(this.world.width+200, Math.random() * 100);
+	  
+	  
+	  cloud.body.allowGravity = false;
+	  cloud.body.velocity.x = -25;
+	},
+	
+	// LEVEL SWITCHING FUNCTIONS
+	
+	finishLevel: function (player, door) {
+	  BalanceGame.gameInfo.currentLevel++;
+	  this.state.start('LevelManager');
 	},
 	
 	quitGame: function (pointer) {

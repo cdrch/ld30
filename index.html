@@ -7,6 +7,7 @@
 	<script src="Boot.js"></script>
 	<script src="Preloader.js"></script>
 	<script src="MainMenu.js"></script>
+	<script src="LevelManager.js"></script>
 	<script src="Game.js"></script>
 </head>
 <body>
@@ -17,14 +18,15 @@ window.onload = function() {
 
 	//	Create your Phaser game and inject it into the gameContainer div.
 	//	We did it in a window.onload event, but you can do it anywhere (requireJS load, anonymous function, jQuery dom ready, - whatever floats your boat)
-	var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+	var game = new Phaser.Game(1280, 640, Phaser.CANVAS, '');
 
 	//	Add the States your game has.
 	//	You don't have to do this in the html, it could be done in your Boot state too, but for simplicity I'll keep it here.
-	game.state.add('Boot', LawChaosGame.Boot);
-	game.state.add('Preloader', LawChaosGame.Preloader);
-	game.state.add('MainMenu', LawChaosGame.MainMenu);
-	game.state.add('Game', LawChaosGame.Game);
+	game.state.add('Boot', BalanceGame.Boot);
+	game.state.add('Preloader', BalanceGame.Preloader);
+	game.state.add('MainMenu', BalanceGame.MainMenu);
+	game.state.add('LevelManager', BalanceGame.LevelManager);
+	game.state.add('Game', BalanceGame.Game);
 
 	//	Now start the Boot state.
 	game.state.start('Boot');
