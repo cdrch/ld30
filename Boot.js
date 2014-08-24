@@ -14,6 +14,9 @@ var BalanceGame = {
         currentMetalSpell: 0,
         currentWaterSpell: 0
     }
+    // ,
+    // originalGameInfo: BalanceGame.gameInfo,
+    // originalPlayerInfo: BalanceGame.playerInfo
 };
 
 BalanceGame.Boot = function (game) {

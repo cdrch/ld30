@@ -21,6 +21,7 @@ BalanceGame.Preloader.prototype = {
 		this.load.image('button1','assets/button1.png');
 		
 		this.load.image('cloud1', 'assets/testcloud1.png');
+		this.load.image('cloud2', 'assets/cloudcover1.png');
 		
 		this.load.image('door1', 'assets/door.png');
 		

@@ -79,6 +79,8 @@ BalanceGame.Game.prototype = {
     // This triggers the clouds
     // this.time.events.repeat(Phaser.Timer.SECOND * 3, 10, this.addCloud, this);
     
+    this.setupMagic();
+    
     this.drawGUI();
     
     
@@ -96,12 +98,12 @@ BalanceGame.Game.prototype = {
     
     if (BalanceGame.playerInfo.health === 0)
     {
-      this.quitGame();
+      this.finishLevel(0);;
     }
     
     if (this.input.keyboard.isDown(Phaser.Keyboard.L))
 		{
-			this.finishLevel();
+			this.finishLevel(1);
 		}
 		
 		if (this.input.keyboard.isDown(Phaser.Keyboard.K))
@@ -117,7 +119,29 @@ BalanceGame.Game.prototype = {
 		  }
 		}
 		
+		if (this.game.input.activePointer.justPressed(20))
+		{
+		  this.summonLightning();
+		}
+		
 		this.updateGUI();
+		
+		if(this.input.keyboard.isDown((Phaser.Keyboard.P)))
+    {
+        this.game.paused = true;
+        // console.log('Paused');
+    }
+	},
+	
+	pauseUpdate: function () {
+	  // this is a seperate update the ticks when game.paused = true
+    // call an input to unpause in phaser here
+    if(this.input.keyboard.isDown((Phaser.Keyboard.U)))
+    {
+        this.game.paused = false;
+        // console.log('Unpaused');
+    }
+
 	},
 	
 	// CREATE FUNCTIONS
@@ -506,6 +530,96 @@ BalanceGame.Game.prototype = {
     return isActive;
 	},
 	
+	pauseInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.P);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+    return isActive;
+	},
+	
+	unpauseInputIsActive: function () {
+	  var isActive = false;
+
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.U);
+    // isActive |= (this.game.input.activePointer.isDown &&
+    //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+    return isActive;
+	},
+	
+	// MAGIC FUNCTIONS
+	
+	setupMagic: function () {
+	 // // Lightning
+	  
+  //   this.explosionGroup = this.game.add.group();
+
+  //   // Create a bitmap for the lightning bolt texture
+  //   this.lightningBitmap = this.game.add.bitmapData(200, 1000);
+
+  //   // Create a sprite to hold the lightning bolt texture
+  //   this.lightning = this.game.add.image(this.game.width/2, 80, this.lightningBitmap);
+
+  //   // Browser must support WebGL
+  //   this.lightning.filters = [ this.game.add.filter('Glow') ];
+  //   this.lightning.anchor.setTo(0.5, 0);
+
+  //   // Create a white rectangle that we'll use to represent the flash
+  //   this.flash = this.game.add.graphics(0, 0);
+  //   this.flash.beginFill(0xffffff, 1);
+  //   this.flash.drawRect(0, 0, this.game.width, this.game.height);
+  //   this.flash.endFill();
+  //   this.flash.alpha = 0;
+	},
+	
+	summonLightning: function () {
+	 // // Rotate the lightning sprite so it goes in the
+  //       // direction of the pointer
+  //       this.lightning.rotation =
+  //           this.game.math.angleBetween(
+  //               this.lightning.x, this.lightning.y,
+  //               this.game.input.activePointer.x, this.game.input.activePointer.y
+  //           ) - Math.PI/2;
+
+  //       // Calculate the distance from the lightning source to the pointer
+  //       var distance = this.game.math.distance(
+  //               this.lightning.x, this.lightning.y,
+  //               this.game.input.activePointer.x, this.game.input.activePointer.y
+  //           );
+
+  //       // Create the lightning texture
+  //       this.createLightningTexture(this.lightningBitmap.width/2, 0, 20, 3, false, distance);
+
+  //       // Make the lightning sprite visible
+  //       this.lightning.alpha = 1;
+
+  //       // Fade out the lightning sprite using a tween on the alpha property.
+  //       // Check out the "Easing function" examples for more info.
+  //       this.game.add.tween(this.lightning)
+  //           .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
+  //           .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out)
+  //           .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
+  //           .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out)
+  //           .to({ alpha: 0 }, 250, Phaser.Easing.Cubic.In)
+  //           .start();
+
+  //       // Create the flash
+  //       this.flash.alpha = 1;
+  //       this.game.add.tween(this.flash)
+  //           .to({ alpha: 0 }, 100, Phaser.Easing.Cubic.In)
+  //           .start();
+
+  //       // Shake the camera by moving it up and down 5 times really fast
+  //       this.game.camera.y = 0;
+  //       this.game.add.tween(this.game.camera)
+  //           .to({ y: -10 }, 40, Phaser.Easing.Sinusoidal.InOut, false, 0, 5, true)
+  //           .start();
+  //   }
+	},
+	
 	// WEATHER FUNCTIONS
 	
 	addCloud: function () {
@@ -525,9 +639,9 @@ BalanceGame.Game.prototype = {
 	
 	// LEVEL SWITCHING FUNCTIONS
 	
-	finishLevel: function (player, door) {
+	finishLevel: function (door) {
 	  BalanceGame.gameInfo.currentLevel++;
-	  this.state.start('LevelManager');
+	  this.state.start('LevelManager', this, door);
 	},
 	
 	quitGame: function (pointer) {
