@@ -35,10 +35,33 @@ BalanceGame.Game.prototype = {
     this.stage.backgroundColor = '#000000';
 
     this.map = this.add.tilemap(BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel]);
-
-    this.map.addTilesetImage('test-tileset', 'test-tiles');
+    this.mapisSky = false;
     
-    this.setupBackgroundLayers();
+    if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap1' ||
+      BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap2')
+    {
+      this.mapisSky = true;
+    }
+    
+    if (this.mapisSky === false)
+    {
+      this.map.addTilesetImage('test-tileset', 'test-tiles');
+    }
+    else if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap3')
+    {
+      this.map.addTilesetImage('sky-tiles', 'sky-tiles');
+    }
+    else
+    {
+      this.map.addTilesetImage('sky-tiles', 'sky-tiles');
+    }
+
+    
+    
+    if (this.mapisSky === false)
+    {
+      this.setupBackgroundLayers();
+    }
     
     this.setupCollisionLayer();
 
@@ -52,19 +75,28 @@ BalanceGame.Game.prototype = {
     this.doors.setAll('anchor.x', 0);
     this.doors.setAll('anchor.y', 1);
     
-    this.map.createFromObjects('Object Layer 1', 33, 'door1', 0, true, false, this.doors);
-		
+    if (this.mapisSky === false)
+    {
+      this.map.createFromObjects('Object Layer 1', 33, 'door1', 0, true, false, this.doors);
+    }
+    
 		//  Here we create our coins group
     this.orbs = this.add.group();
     this.orbs.enableBody = true;
     
-    this.map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
+    if (this.mapisSky === false)
+    {
+      this.map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
+    }
     
     this.setupPlayer();
     
     this.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
     
-    this.setupForegroundLayers();
+    if (this.mapisSky === false)
+    {
+      this.setupForegroundLayers();
+    }
     
     this.clouds = this.add.group();
     this.clouds.enableBody = true;
@@ -80,6 +112,8 @@ BalanceGame.Game.prototype = {
     // this.time.events.repeat(Phaser.Timer.SECOND * 3, 10, this.addCloud, this);
     
     this.setupMagic();
+    
+    this.gotLightning = BalanceGame.gameInfo.gotLightning[BalanceGame.gameInfo.currentLevel];
     
     this.drawGUI();
     
@@ -112,7 +146,7 @@ BalanceGame.Game.prototype = {
 		// 	this.gui.x -= 10000;
 		}
 		
-		if (this.input.keyboard.isDown((Phaser.Keyboard.A)))
+		if (this.input.keyboard.isDown((Phaser.Keyboard.Y)))
 		{
 		  if (BalanceGame.playerInfo.health > 0)
 		  {
@@ -120,9 +154,29 @@ BalanceGame.Game.prototype = {
 		  }
 		}
 		
-		if (this.game.input.activePointer.justPressed(20))
+		if(this.input.keyboard.isDown((Phaser.Keyboard.ONE)))
+    {
+        this.player.currentMagic = 0;
+        // console.log('Paused');
+    } else if(this.input.keyboard.isDown((Phaser.Keyboard.TWO)))
+    {
+        this.player.currentMagic = 1;
+        // console.log('Paused');
+    }
+    
+    if (this.player.currentMagic === 1)
+    {
+      this.teleport = true;
+    } else {
+      this.teleport = false;
+    }
+		
+		if (this.gotLightning)
 		{
-		  this.summonLightning();
+  		if (this.game.input.activePointer.justPressed(20))
+  		{
+  		  this.summonLightning();
+  		}
 		}
 		
 		this.updateGUI();
@@ -186,6 +240,8 @@ BalanceGame.Game.prototype = {
     
     this.canDoubleJump = true;
     this.canVariableJump = true;
+    
+    this.player.currentMagic = 0;
 	},
 	
 	setupBackgroundLayers: function () {
@@ -195,9 +251,19 @@ BalanceGame.Game.prototype = {
 	
 	setupCollisionLayer: function () {
 	  this.layerC = this.map.createLayer('Collision');
-    this.map.setCollisionBetween(3, 4, true, this.layerC);
-    this.map.setCollision(1, true, this.layerC);
-    this.map.setCollision(9, true, this.layerC);
+	  if (this.mapisSky === false)
+	  {
+      this.map.setCollisionBetween(3, 4, true, this.layerC);
+      this.map.setCollision(1, true, this.layerC);
+      this.map.setCollision(9, true, this.layerC);
+	  }
+	  else
+	  {
+	    this.map.setCollision(1, true, this.layerC);
+	    this.map.setCollision(2, true, this.layerC);
+	    this.map.setCollision(19, true, this.layerC);
+	    this.map.setCollision(20, true, this.layerC);
+	  }
 	},
 	
 	setupForegroundLayers: function () {
@@ -288,8 +354,7 @@ BalanceGame.Game.prototype = {
 	},
 	
 	collectOrb: function (player, orb) {
-	  BalanceGame.playerInfo.maxWood++;
-	  BalanceGame.playerInfo.wood++;
+	  BalanceGame.playerInfo.storedLightning += 5;
 	 // this.woodOrb.scale.setTo(0.5,0.5);
 	  orb.destroy();
 	},
@@ -299,28 +364,33 @@ BalanceGame.Game.prototype = {
 	drawGUI: function() {
 	  this.gui = this.add.group();
 	  this.guiBackOrbs = this.add.group();
-	  for (var i = 0; i < 5; i++)
-	  {
-	    var b = this.add.sprite(((i + 1) * 256) - 128, 585, 'guiCircle00');
+	 // for (var i = 0; i < 5; i++)
+	 // {
+	 //   var b = this.add.sprite(((i + 1) * 256) - 128, 585, 'guiCircle00');
+	 //  // b.anchor.x = 0.5;
+	 //  // b.anchor.y = 0.5;
+	 //   this.guiBackOrbs.add(b);
+	 // }
+	  
+	  var b = this.add.sprite(((3) * 256) - 128, 585, 'guiCircle00');
 	   // b.anchor.x = 0.5;
 	   // b.anchor.y = 0.5;
-	    this.guiBackOrbs.add(b);
-	  }
+	  this.guiBackOrbs.add(b);
 	  
 	  this.guiOrbs = this.add.group();
 	 
 	  // TODO: simplify these numbers
-	  this.woodOrb = this.add.sprite(((0 + 1) * 256) - 128, 585, 'guiCircleWood');
-	  this.fireOrb = this.add.sprite(((1 + 1) * 256) - 128, 585, 'guiCircleFire');
-	  this.earthOrb = this.add.sprite(((2 + 1) * 256) - 128, 585, 'guiCircleEarth');
-	  this.metalOrb = this.add.sprite(((3 + 1) * 256) - 128, 585, 'guiCircleMetal');
-	  this.waterOrb = this.add.sprite(((4 + 1) * 256) - 128, 585, 'guiCircleWater');
+	 // this.woodOrb = this.add.sprite(((0 + 1) * 256) - 128, 585, 'guiCircleWood');
+	 // this.fireOrb = this.add.sprite(((1 + 1) * 256) - 128, 585, 'guiCircleFire');
+	  this.lightningOrb = this.add.sprite(((2 + 1) * 256) - 128, 585, 'guiCircleLightning');
+	 // this.metalOrb = this.add.sprite(((3 + 1) * 256) - 128, 585, 'guiCircleMetal');
+	 // this.waterOrb = this.add.sprite(((4 + 1) * 256) - 128, 585, 'guiCircleWater');
 	  
-	  this.guiOrbs.add(this.woodOrb);
-	  this.guiOrbs.add(this.fireOrb);
-	  this.guiOrbs.add(this.earthOrb);
-	  this.guiOrbs.add(this.metalOrb);
-	  this.guiOrbs.add(this.waterOrb);
+	 // this.guiOrbs.add(this.woodOrb);
+	 // this.guiOrbs.add(this.fireOrb);
+	  this.guiOrbs.add(this.lightningOrb);
+	 // this.guiOrbs.add(this.metalOrb);
+	 // this.guiOrbs.add(this.waterOrb);
 	  
 	  this.healthBar = this.add.sprite(640, 16, 'healthBar');
 	  this.healthBar.anchor.setTo(0.5, 0.5);
@@ -337,25 +407,25 @@ BalanceGame.Game.prototype = {
 	  
 	  var style = { font: "65px Arial", fill: "#000000", align: "center" };
 	  
-    this.woodOrb.text = this.add.text(this.woodOrb.x, this.woodOrb.y, "", style);
-    this.woodOrb.text.anchor.set(0.5);
-    this.woodOrb.text.fixedToCamera = true;
+    // this.woodOrb.text = this.add.text(this.woodOrb.x, this.woodOrb.y, "", style);
+    // this.woodOrb.text.anchor.set(0.5);
+    // this.woodOrb.text.fixedToCamera = true;
     
-    this.fireOrb.text = this.add.text(this.fireOrb.x, this.fireOrb.y, "", style);
-    this.fireOrb.text.anchor.set(0.5);
-    this.fireOrb.text.fixedToCamera = true;
+    // this.fireOrb.text = this.add.text(this.fireOrb.x, this.fireOrb.y, "", style);
+    // this.fireOrb.text.anchor.set(0.5);
+    // this.fireOrb.text.fixedToCamera = true;
     
-    this.earthOrb.text = this.add.text(this.earthOrb.x, this.earthOrb.y, "", style);
-    this.earthOrb.text.anchor.set(0.5);
-    this.earthOrb.text.fixedToCamera = true;
+    this.lightningOrb.text = this.add.text(this.lightningOrb.x, this.lightningOrb.y, "I", style);
+    this.lightningOrb.text.anchor.set(0.5);
+    this.lightningOrb.text.fixedToCamera = true;
     
-    this.metalOrb.text = this.add.text(this.metalOrb.x, this.metalOrb.y, "", style);
-    this.metalOrb.text.anchor.set(0.5);
-    this.metalOrb.text.fixedToCamera = true;
+    // this.metalOrb.text = this.add.text(this.metalOrb.x, this.metalOrb.y, "", style);
+    // this.metalOrb.text.anchor.set(0.5);
+    // this.metalOrb.text.fixedToCamera = true;
     
-    this.waterOrb.text = this.add.text(this.waterOrb.x, this.waterOrb.y, "", style);
-    this.waterOrb.text.anchor.set(0.5);
-    this.waterOrb.text.fixedToCamera = true;
+    // this.waterOrb.text = this.add.text(this.waterOrb.x, this.waterOrb.y, "", style);
+    // this.waterOrb.text.anchor.set(0.5);
+    // this.waterOrb.text.fixedToCamera = true;
 	  
 	  
 	 // this.graphics = this.add.graphics(0, 0);
@@ -371,159 +441,147 @@ BalanceGame.Game.prototype = {
 	
 	updateGUI: function () {
 	  // wood gui update
-	  if (BalanceGame.playerInfo.maxWood <= 0)
-	  {
-	    this.woodOrb.scale.setTo(0, 0);
-	  } else {
-	    this.woodOrb.scale.setTo(
-	    BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood, 
-	    BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood
-	    );
-	    if (BalanceGame.playerInfo.currentWoodSpell === 1)
-	    {
-	      this.woodOrb.text.text = 'I';
-	    }
-	    else if (BalanceGame.playerInfo.currentWoodSpell === 2)
-	    {
-	      this.woodOrb.text.text = 'II';
-	    }
-	    else if (BalanceGame.playerInfo.currentWoodSpell === 3)
-	    {
-	      this.woodOrb.text.text = 'III';
-	    }
-	    else if (BalanceGame.playerInfo.currentWoodSpell === 4)
-	    {
-	      this.woodOrb.text.text = 'IV';
-	    }
-	    else if (BalanceGame.playerInfo.currentWoodSpell === 5)
-	    {
-	      this.woodOrb.text.text = 'V';
-	    }
-	  }
+	 // if (BalanceGame.playerInfo.maxWood <= 0)
+	 // {
+	 //   this.woodOrb.scale.setTo(0, 0);
+	 // } else {
+	 //   this.woodOrb.scale.setTo(
+	 //   BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood, 
+	 //   BalanceGame.playerInfo.wood/BalanceGame.playerInfo.maxWood
+	 //   );
+	 //   if (BalanceGame.playerInfo.currentWoodSpell === 1)
+	 //   {
+	 //     this.woodOrb.text.text = 'I';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWoodSpell === 2)
+	 //   {
+	 //     this.woodOrb.text.text = 'II';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWoodSpell === 3)
+	 //   {
+	 //     this.woodOrb.text.text = 'III';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWoodSpell === 4)
+	 //   {
+	 //     this.woodOrb.text.text = 'IV';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWoodSpell === 5)
+	 //   {
+	 //     this.woodOrb.text.text = 'V';
+	 //   }
+	 // }
 		
-		// fire gui update
-	  if (BalanceGame.playerInfo.maxfire <= 0)
-	  {
-	    this.fireOrb.scale.setTo(0, 0);
-	  } else {
-	    this.fireOrb.scale.setTo(
-	    BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire, 
-	    BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire
-	    );
-	    if (BalanceGame.playerInfo.currentFireSpell === 1)
-	    {
-	      this.fireOrb.text.text = 'I';
-	    }
-	    else if (BalanceGame.playerInfo.currentFireSpell === 2)
-	    {
-	      this.fireOrb.text.text = 'II';
-	    }
-	    else if (BalanceGame.playerInfo.currentFireSpell === 3)
-	    {
-	      this.fireOrb.text.text = 'III';
-	    }
-	    else if (BalanceGame.playerInfo.currentFireSpell === 4)
-	    {
-	      this.fireOrb.text.text = 'IV';
-	    }
-	    else if (BalanceGame.playerInfo.currentFireSpell === 5)
-	    {
-	      this.fireOrb.text.text = 'V';
-	    }
-	  }
+		// // fire gui update
+	 // if (BalanceGame.playerInfo.maxfire <= 0)
+	 // {
+	 //   this.fireOrb.scale.setTo(0, 0);
+	 // } else {
+	 //   this.fireOrb.scale.setTo(
+	 //   BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire, 
+	 //   BalanceGame.playerInfo.fire/BalanceGame.playerInfo.maxFire
+	 //   );
+	 //   if (BalanceGame.playerInfo.currentFireSpell === 1)
+	 //   {
+	 //     this.fireOrb.text.text = 'I';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentFireSpell === 2)
+	 //   {
+	 //     this.fireOrb.text.text = 'II';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentFireSpell === 3)
+	 //   {
+	 //     this.fireOrb.text.text = 'III';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentFireSpell === 4)
+	 //   {
+	 //     this.fireOrb.text.text = 'IV';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentFireSpell === 5)
+	 //   {
+	 //     this.fireOrb.text.text = 'V';
+	 //   }
+	 // }
 		
-		// earth gui update
-	  if (BalanceGame.playerInfo.maxearth <= 0)
+		// lightning gui update
+	  if (BalanceGame.playerInfo.maxlightning <= 0)
 	  {
-	    this.earthOrb.scale.setTo(0, 0);
+	    this.lightningOrb.scale.setTo(0, 0);
 	  } else {
-	    this.earthOrb.scale.setTo(
-	    BalanceGame.playerInfo.earth/BalanceGame.playerInfo.maxEarth, 
-	    BalanceGame.playerInfo.earth/BalanceGame.playerInfo.maxEarth
+	    this.lightningOrb.scale.setTo(
+	    BalanceGame.playerInfo.storedLightning/100, 
+	    BalanceGame.playerInfo.storedLightning/100
 	    );
-	    if (BalanceGame.playerInfo.currentEarthSpell === 1)
+	    if (this.teleport === true)
 	    {
-	      this.earthOrb.text.text = 'I';
+	      this.lightningOrb.text.text = 'II';
 	    }
-	    else if (BalanceGame.playerInfo.currentEarthSpell === 2)
+	    else
 	    {
-	      this.earthOrb.text.text = 'II';
-	    }
-	    else if (BalanceGame.playerInfo.currentEarthSpell === 3)
-	    {
-	      this.earthOrb.text.text = 'III';
-	    }
-	    else if (BalanceGame.playerInfo.currentEarthSpell === 4)
-	    {
-	      this.earthOrb.text.text = 'IV';
-	    }
-	    else if (BalanceGame.playerInfo.currentEarthSpell === 5)
-	    {
-	      this.earthOrb.text.text = 'V';
+	      this.lightningOrb.text.text = 'I';
 	    }
 	  }
 		
 		// metal gui update
-	  if (BalanceGame.playerInfo.maxmetal <= 0)
-	  {
-	    this.metalOrb.scale.setTo(0, 0);
-	  } else {
-	    this.metalOrb.scale.setTo(
-	    BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal, 
-	    BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal
-	    );
-	    if (BalanceGame.playerInfo.currentMetalSpell === 1)
-	    {
-	      this.metalOrb.text.text = 'I';
-	    }
-	    else if (BalanceGame.playerInfo.currentMetalSpell === 2)
-	    {
-	      this.metalOrb.text.text = 'II';
-	    }
-	    else if (BalanceGame.playerInfo.currentMetalSpell === 3)
-	    {
-	      this.metalOrb.text.text = 'III';
-	    }
-	    else if (BalanceGame.playerInfo.currentMetalSpell === 4)
-	    {
-	      this.metalOrb.text.text = 'IV';
-	    }
-	    else if (BalanceGame.playerInfo.currentMetalSpell === 5)
-	    {
-	      this.metalOrb.text.text = 'V';
-	    }
-	  }
+	 // if (BalanceGame.playerInfo.maxmetal <= 0)
+	 // {
+	 //   this.metalOrb.scale.setTo(0, 0);
+	 // } else {
+	 //   this.metalOrb.scale.setTo(
+	 //   BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal, 
+	 //   BalanceGame.playerInfo.metal/BalanceGame.playerInfo.maxMetal
+	 //   );
+	 //   if (BalanceGame.playerInfo.currentMetalSpell === 1)
+	 //   {
+	 //     this.metalOrb.text.text = 'I';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentMetalSpell === 2)
+	 //   {
+	 //     this.metalOrb.text.text = 'II';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentMetalSpell === 3)
+	 //   {
+	 //     this.metalOrb.text.text = 'III';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentMetalSpell === 4)
+	 //   {
+	 //     this.metalOrb.text.text = 'IV';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentMetalSpell === 5)
+	 //   {
+	 //     this.metalOrb.text.text = 'V';
+	 //   }
+	 // }
 		
 		// water gui update
-	  if (BalanceGame.playerInfo.maxwater <= 0)
-	  {
-	    this.waterOrb.scale.setTo(0, 0);
-	  } else {
-	    this.waterOrb.scale.setTo(
-	    BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater, 
-	    BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater
-	    );
-	    if (BalanceGame.playerInfo.currentWaterSpell === 1)
-	    {
-	      this.waterOrb.text.text = 'I';
-	    }
-	    else if (BalanceGame.playerInfo.currentWaterSpell === 2)
-	    {
-	      this.waterOrb.text.text = 'II';
-	    }
-	    else if (BalanceGame.playerInfo.currentWaterSpell === 3)
-	    {
-	      this.waterOrb.text.text = 'III';
-	    }
-	    else if (BalanceGame.playerInfo.currentWaterSpell === 4)
-	    {
-	      this.waterOrb.text.text = 'IV';
-	    }
-	    else if (BalanceGame.playerInfo.currentWaterSpell === 5)
-	    {
-	      this.waterOrb.text.text = 'V';
-	    }
-	  }
+	 // if (BalanceGame.playerInfo.maxwater <= 0)
+	 // {
+	 //   this.waterOrb.scale.setTo(0, 0);
+	 // } else {
+	 //   this.waterOrb.scale.setTo(
+	 //   BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater, 
+	 //   BalanceGame.playerInfo.water/BalanceGame.playerInfo.maxEater
+	 //   );
+	 //   if (BalanceGame.playerInfo.currentWaterSpell === 1)
+	 //   {
+	 //     this.waterOrb.text.text = 'I';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWaterSpell === 2)
+	 //   {
+	 //     this.waterOrb.text.text = 'II';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWaterSpell === 3)
+	 //   {
+	 //     this.waterOrb.text.text = 'III';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWaterSpell === 4)
+	 //   {
+	 //     this.waterOrb.text.text = 'IV';
+	 //   }
+	 //   else if (BalanceGame.playerInfo.currentWaterSpell === 5)
+	 //   {
+	 //     this.waterOrb.text.text = 'V';
+	 //   }
+	 // }
 	  
 	  this.healthBar.scale.setTo(
 	    BalanceGame.playerInfo.health/BalanceGame.playerInfo.maxHealth, 1);
@@ -535,7 +593,7 @@ BalanceGame.Game.prototype = {
 	leftInputIsActive: function () {
 	  var isActive = false;
 
-    isActive = this.input.keyboard.isDown(Phaser.Keyboard.LEFT);
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.LEFT) || this.input.keyboard.isDown(Phaser.Keyboard.A);
     // isActive |= (this.game.input.activePointer.isDown &&
     //     this.game.input.activePointer.x < this.game.width/4);
 
@@ -545,7 +603,7 @@ BalanceGame.Game.prototype = {
 	rightInputIsActive: function () {
 	  var isActive = false;
 
-    isActive = this.input.keyboard.isDown(Phaser.Keyboard.RIGHT);
+    isActive = this.input.keyboard.isDown(Phaser.Keyboard.RIGHT) || this.input.keyboard.isDown(Phaser.Keyboard.D);
     // isActive |= (this.game.input.activePointer.isDown &&
     //     this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
 
@@ -555,7 +613,7 @@ BalanceGame.Game.prototype = {
 	upInputIsActive: function (duration) {
 	  var isActive = false;
 
-    isActive = this.input.keyboard.justPressed(Phaser.Keyboard.UP, duration);
+    isActive = this.input.keyboard.justPressed(Phaser.Keyboard.UP, duration) || this.input.keyboard.justPressed(Phaser.Keyboard.W, duration);
     // isActive |= (this.game.input.activePointer.justPressed(duration + 1000/60) &&
     //     this.game.input.activePointer.x > this.game.width/4 &&
     //     this.game.input.activePointer.x < this.game.width/2 + this.game.width/4);
@@ -627,9 +685,11 @@ BalanceGame.Game.prototype = {
     this.flash.drawRect(0, 0, this.game.width, this.game.height);
     this.flash.endFill();
     this.flash.alpha = 0;
+    this.flash.fixedToCamera = true;
     
     this.boltReady = true;
     this.teleport = true;
+    this.infinite = false;
 	},
 	
 	updateLightning: function () {
@@ -656,6 +716,16 @@ BalanceGame.Game.prototype = {
 	  if(this.boltReady === false)
 	  {
 	    return;
+	  }
+	  
+	  if (this.infinite) {
+	    // no energy used!
+	  } else if (BalanceGame.playerInfo.storedLightning < 10) {
+	    // out of power
+	    return;
+	  } else {
+	    // uses up 10 power, so 10 shots total
+	    BalanceGame.playerInfo.storedLightning -= 10;
 	  }
 	  
 	 // this.nextBoltAt = this.time.now + this.shotDelay;

@@ -27,12 +27,13 @@ BalanceGame.Preloader.prototype = {
 		this.load.image('door1', 'assets/door.png');
 		
 		this.load.image('guiCircle00', 'assets/guiCircle00.png');
-		this.load.image('guiCircleWood', 'assets/guiCircleWood.png');
-		this.load.image('guiCircleFire', 'assets/guiCircleFire.png');
-		this.load.image('guiCircleEarth', 'assets/guiCircleEarth.png');
-		this.load.image('guiCircleMetal', 'assets/guiCircleMetal.png');
-		this.load.image('guiCircleWater', 'assets/guiCircleWater.png');
+		this.load.image('guiCircleLightning', 'assets/guiCircleLightning.png');
 		this.load.image('healthBar', 'assets/healthBar.png');
+		
+		this.load.image('sky-tiles', 'assets/sky-tiles.png');
+		this.load.tilemap('skymap1', 'assets/skymap1a.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap2', 'assets/skymap2a.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap3', 'assets/skymap3.json', null, Phaser.Tilemap.TILED_JSON);
 		
 
 	},
