@@ -15,7 +15,8 @@ BalanceGame.Preloader.prototype = {
 		this.load.tilemap('map5', 'assets/testmap5.json', null, Phaser.Tilemap.TILED_JSON);
 		this.load.tilemap('map6', 'assets/testmap6b.json', null, Phaser.Tilemap.TILED_JSON);
 		this.load.image('test-tiles', 'assets/test-tileset2.png');
-		this.load.image('player', 'assets/testplayer.png');
+		this.load.image('testPlayer', 'assets/testplayer.png');
+		this.load.spritesheet('player', 'assets/finalchar.png', 44, 38);
 		this.load.image('testorb1', 'assets/testorb1.png')
 		
 		this.load.image('button1','assets/button1.png');
@@ -44,6 +45,6 @@ BalanceGame.Preloader.prototype = {
 
 	render: function () {
 
-	},
+	}
 
 };

@@ -157,6 +157,18 @@ BalanceGame.Game.prototype = {
     this.JUMP_SPEED = -350; // pixels/second (remember negative y is up)
     
 	  this.player = this.add.sprite(64, 64, 'player');
+	  this.player.animations.add('stand_right', [1], 6, true);
+	  this.player.animations.add('stand_left', [0], 6, true);
+	  this.player.animations.add('run_right', [4, 2, 5, 3], 6, true);
+	  this.player.animations.add('run_left', [7, 9, 6, 8], 6, true);
+	  this.player.animations.add('fall_right', [10], 6, true);
+	  this.player.animations.add('fall_left', [11], 6, true);
+	  
+	  this.player.facing = 'right';
+	  this.player.moving = false;
+	  this.player.falling = false;
+	  
+	  this.player.animations.play('stand_right');
 
     this.physics.enable(this.player);
 
@@ -199,11 +211,16 @@ BalanceGame.Game.prototype = {
 	  if (this.leftInputIsActive()) {
         // If the LEFT key is down, set the player velocity to move left
         this.player.body.acceleration.x = -this.ACCELERATION;
+        this.player.facing = 'left';
+        this.player.moving = true;
     } else if (this.rightInputIsActive()) {
         // If the RIGHT key is down, set the player velocity to move right
         this.player.body.acceleration.x = this.ACCELERATION;
+        this.player.facing = 'right';
+        this.player.moving = true;
     } else {
         this.player.body.acceleration.x = 0;
+        this.player.moving = false;
     }
     
     // Set a variable that is true when the player is touching the ground
@@ -232,6 +249,41 @@ BalanceGame.Game.prototype = {
     // Don't allow variable jump height after the jump button is released
     if (!this.upInputIsActive()) {
         this.canVariableJump = false;
+    }
+    
+    if (this.player.body.velocity.y >= 10)
+    {
+      this.player.falling = true;
+    } else {
+      this.player.falling = false;
+    }
+    
+    if (this.player.falling === true)
+    {
+      if (this.player.facing === 'right')
+      {
+        this.player.animations.play('fall_right');
+      } else {
+        this.player.animations.play('fall_left');
+      }
+    } 
+    else if (this.player.moving === true) 
+    {
+      if (this.player.facing === 'right')
+      {
+        this.player.animations.play('run_right');
+      } else {
+        this.player.animations.play('run_left');
+      }
+    }
+    else
+    {
+      if (this.player.facing === 'right')
+      {
+        this.player.animations.play('stand_right');
+      } else {
+        this.player.animations.play('stand_left');
+      }
     }
 	},
 	
@@ -577,7 +629,7 @@ BalanceGame.Game.prototype = {
     this.flash.alpha = 0;
     
     this.boltReady = true;
-    this.teleport = false;
+    this.teleport = true;
 	},
 	
 	updateLightning: function () {
