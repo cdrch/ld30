@@ -576,9 +576,8 @@ BalanceGame.Game.prototype = {
     this.flash.endFill();
     this.flash.alpha = 0;
     
-    this.nextBoltAt = 0;
-    this.shotDelay = 3000;
     this.boltReady = true;
+    this.teleport = false;
 	},
 	
 	updateLightning: function () {
@@ -595,6 +594,10 @@ BalanceGame.Game.prototype = {
 	
 	resetLightningTimer: function () {
 	  this.boltReady = true;
+	},
+	
+	resetGravity: function () {
+	  this.player.body.allowGravity = true;
 	},
 	
 	summonLightning: function () {
@@ -647,6 +650,26 @@ BalanceGame.Game.prototype = {
     // this.game.add.tween(this.game.camera)
     //     .to({ y: -10 }, 40, Phaser.Easing.Sinusoidal.InOut, false, 0, 5, true)
     //     .start();
+    
+    if(this.teleport === true)
+    {
+      this.player.body.allowGravity = false;
+      this.player.x = this.game.input.activePointer.x;
+      this.player.y = this.game.input.activePointer.y;
+      // this.player.body.applyForce([
+      //   this.game.input.activePointer.x - this.player.x,
+      //   this.game.input.activePointer.y - this.player.y
+      //   ], this.player.x, this.player.y);
+      // this.player.body.velocity.x = (this.game.input.activePointer.x - this.player.x) * 1000;
+      // this.player.body.velocity.y = (this.game.input.activePointer.y - this.player.y) * 1000;
+      
+      this.time.events.add(500, this.resetGravity, this);
+    }
+    else
+    {
+      
+    }
+    
 	  this.boltReady = false;
 	},
 	
