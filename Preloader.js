@@ -31,9 +31,13 @@ BalanceGame.Preloader.prototype = {
 		this.load.image('healthBar', 'assets/healthBar.png');
 		
 		this.load.image('sky-tiles', 'assets/sky-tiles.png');
+		this.load.image('clouds', 'assets/clouds.png');
 		this.load.tilemap('skymap1', 'assets/skymap1a.json', null, Phaser.Tilemap.TILED_JSON);
 		this.load.tilemap('skymap2', 'assets/skymap2a.json', null, Phaser.Tilemap.TILED_JSON);
-		this.load.tilemap('skymap3', 'assets/skymap3.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap3', 'assets/skymap3a.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap5', 'assets/skymap5.json', null, Phaser.Tilemap.TILED_JSON);
+		
+		this.load.audio('creepySong', ['creepy-reverb.mp3']);
 		
 
 	},

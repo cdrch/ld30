@@ -43,13 +43,21 @@ BalanceGame.Game.prototype = {
       this.mapisSky = true;
     }
     
-    if (this.mapisSky === false)
+    if (true === false)
     {
-      this.map.addTilesetImage('test-tileset', 'test-tiles');
+      
     }
     else if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap3')
     {
       this.map.addTilesetImage('sky-tiles', 'sky-tiles');
+    }
+    else if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap5')
+    {
+      this.map.addTilesetImage('clouds', 'clouds');
+    }
+    else if (this.mapisSky === false)
+    {
+      this.map.addTilesetImage('test-tileset', 'test-tiles');
     }
     else
     {
@@ -74,6 +82,7 @@ BalanceGame.Game.prototype = {
     this.doors.enableBody = true;
     this.doors.setAll('anchor.x', 0);
     this.doors.setAll('anchor.y', 1);
+    this.doors.setAll('body.allowGravity', false);
     
     if (this.mapisSky === false)
     {
@@ -415,8 +424,8 @@ BalanceGame.Game.prototype = {
     // this.fireOrb.text.anchor.set(0.5);
     // this.fireOrb.text.fixedToCamera = true;
     
-    this.lightningOrb.text = this.add.text(this.lightningOrb.x, this.lightningOrb.y, "I", style);
-    this.lightningOrb.text.anchor.set(0.5);
+    this.lightningOrb.text = this.add.text(this.lightningOrb.x, this.lightningOrb.y, "", style);
+    this.lightningOrb.text.anchor.set(0.5, 0.5);
     this.lightningOrb.text.fixedToCamera = true;
     
     // this.metalOrb.text = this.add.text(this.metalOrb.x, this.metalOrb.y, "", style);

@@ -1,6 +1,6 @@
 var BalanceGame = {
 
-    gameInfo: { levels: ['skymap1', 'map6'], startX: [64, 256], startY: [64, 64], currentLevel: 0, gotLightning: [true, false] },
+    gameInfo: { levels: ['skymap5', 'map6'], startX: [64, 256], startY: [64, 64], currentLevel: 0, gotLightning: [true, false] },
     playerInfo: { health: 100, maxHealth: 100, storedLightning: 100 }
     // ,
     // originalGameInfo: BalanceGame.gameInfo,
