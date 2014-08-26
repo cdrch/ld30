@@ -26,36 +26,58 @@ BalanceGame.Game = function (game) {
 
 };
 
+var player;
+var clouds;
+var t;
+var playerLoc;
+var game;
+
 BalanceGame.Game.prototype = {
 
 	create: function () {
+    
+    t = this;
 
 		this.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.stage.backgroundColor = '#000000';
+    this.stage.backgroundColor = '#00EFE3';
+    
+    this.levelIsOver = false;
 
-    this.map = this.add.tilemap(BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel]);
-    this.mapisSky = false;
+    this.mapIsSky = false;
+    this.mapIsNewSky = false;
+    
+    if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'sky1')
+    {
+      this.mapIsNewSky = true;
+    }
     
     if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap1' ||
       BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap2')
     {
-      this.mapisSky = true;
+      this.mapIsSky = true;
+    }
+    // Old newSky levels
+    // BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap5' || 
+    //   BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap6' || 
+    //   BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap7' ||
+    // BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] === 'skymap8'
+    
+    if (this.mapIsNewSky === false)
+    {
+      this.map = this.add.tilemap(BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel]);
     }
     
-    if (true === false)
-    {
-      
-    }
-    else if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap3')
+    
+    if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap3')
     {
       this.map.addTilesetImage('sky-tiles', 'sky-tiles');
     }
-    else if (BalanceGame.gameInfo.levels[BalanceGame.gameInfo.currentLevel] == 'skymap5')
+    else if (this.mapIsNewSky === true)
     {
-      this.map.addTilesetImage('clouds', 'clouds');
+      // this.map.addTilesetImage('clouds', 'clouds');
     }
-    else if (this.mapisSky === false)
+    else if (this.mapIsSky === false)
     {
       this.map.addTilesetImage('test-tileset', 'test-tiles');
     }
@@ -64,61 +86,188 @@ BalanceGame.Game.prototype = {
       this.map.addTilesetImage('sky-tiles', 'sky-tiles');
     }
 
+    this.cloudLevels = [160, 352, 544];
     
-    
-    if (this.mapisSky === false)
+    if (this.mapIsNewSky === false && this.mapIsSky === false)
     {
       this.setupBackgroundLayers();
     }
     
-    this.setupCollisionLayer();
+    if (this.mapIsNewSky === false) 
+    {
+      this.setupCollisionLayer();
+    }
 
     //  Un-comment this on to see the collision tiles
     // layer.debug = true;
-
-    this.layerC.resizeWorld();
+    if (this.mapIsNewSky === false) 
+    {
+      this.layerC.resizeWorld();
+      
+      this.doors = this.add.group();
+      this.doors.enableBody = true;
+      this.doors.setAll('anchor.x', 0);
+      this.doors.setAll('anchor.y', 1);
+      this.doors.setAll('body.allowGravity', false);
+    }
     
-    this.doors = this.add.group();
-    this.doors.enableBody = true;
-    this.doors.setAll('anchor.x', 0);
-    this.doors.setAll('anchor.y', 1);
-    this.doors.setAll('body.allowGravity', false);
-    
-    if (this.mapisSky === false)
+    if (this.mapIsSky === false && this.mapIsNewSky === false)
     {
       this.map.createFromObjects('Object Layer 1', 33, 'door1', 0, true, false, this.doors);
     }
     
-		//  Here we create our coins group
     this.orbs = this.add.group();
     this.orbs.enableBody = true;
     
-    if (this.mapisSky === false)
+    if (this.mapIsNewSky === false && this.mapIsSky === false)
     {
       this.map.createFromObjects('Object Layer 1', 7, 'testorb1', 0, true, false, this.orbs);
     }
     
-    this.setupPlayer();
     
+    // Enemy setup
+    if (this.mapIsNewSky)
+    {
+      
+      // this.reverseEnemyTriggers = this.add.group();
+      // this.reverseEnemyTriggers.physicsBodyType = Phaser.Physics.ARCADE;
+      // this.reverseEnemyTriggers.enableBody = true;
+      
+      // for (var i = 0; (i * 100) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 100, 160, null, 0, this.reverseEnemyTriggers);
+      //   trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      
+      // for (var i = 0; (i * 100) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 100, 352, null, 0, this.reverseEnemyTriggers);
+      //   trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      
+      // for (var i = 0; (i * 100) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 100, 544, null, 0, this.reverseEnemyTriggers);
+      //   trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      // this.reverseEnemyTriggers.setAll('body.allowGravity', false);
+      // this.reverseEnemyTriggers.fixedToCamera = true;
+      
+      // Add an enemy to the enemies group
+      this.enemiesGroup = this.add.group();
+      // for (var i = (this.rnd * 100) + 200; i+500 < this.world.width; i += (this.rnd * 100) + 400 )
+      // {
+      //   var enemy = this.add.sprite(i, this.cloudLevels[i%3] +50, 'testEnemy', 0, this.enemiesGroup);
+      //   this.physics.enable(enemy, Phaser.Physics.ARCADE);
+      //   enemy.body.velocity.y = -50;
+      // }
+      for (var i = 0; i < 10; i++)
+      {
+        var enemy = this.add.sprite(i*100, 600, 'enemy1', 0, this.enemiesGroup);
+        this.physics.enable(enemy, Phaser.Physics.ARCADE);
+        enemy.body.velocity.y = -50;
+        enemy.body.velocity.x = 50;
+        enemy.body.allowGravity = false;
+        
+    	  enemy.animations.add('fly_right', [0,1,2,3,4,5,4,3,2,1], 12, true);
+	      enemy.animations.add('fly_left', [11,10,9,8,7,6,7,8,9,10], 12, true);
+      }
+      // var enemy = this.add.sprite(50, 0, 'enemy', 0, enemiesGroup);
+      // this.physics.enable(enemy, Phaser.Physics.ARCADE);
+      // enemy.body.velocity.x = 100;
+      
+    }
+    
+    if (this.mapIsNewSky)
+    {
+      // x, y, width, height
+      this.world.setBounds(0, 0, 40000, 3000);
+      this.clouds = this.add.group();
+      clouds = this.clouds;
+      this.clouds.enableBody = true;
+      this.clouds.physicsBodyType = Phaser.Physics.ARCADE;
+      
+      // for (var i = 0; (i * 640) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 640, 160, 'cloudX10', 0, this.clouds);
+      //   // trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      
+      // for (var i = 0; (i * 640) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 640, 352, 'cloudX10', 0, this.clouds);
+      //   // trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      
+      // for (var i = 0; (i * 640) < this.world.width; i++)
+      // {
+      //   var trigger = this.add.sprite(i * 640, 544, 'cloudX10', 0, this.clouds);
+      //   // trigger.body.setSize(48, 48, 0, 0);
+	     //// trigger.anchor.setTo(0.5, 0.5);
+      // }
+      
+      for (var i = 0; i < 4; i++)
+      {
+        var trigger = this.add.sprite(i * 640, 160, 'cloudX10', 0, this.clouds);
+        // trigger.body.setSize(48, 48, 0, 0);
+	     // trigger.anchor.setTo(0.5, 0.5);
+      }
+      
+      for (var i = 0; i < 4; i++)
+      {
+        var trigger = this.add.sprite(i * 640, 352, 'cloudX10', 0, this.clouds);
+        // trigger.body.setSize(48, 48, 0, 0);
+	     // trigger.anchor.setTo(0.5, 0.5);
+      }
+      
+      for (var i = 0; i < 4; i++)
+      {
+        var trigger = this.add.sprite(i * 640, 544, 'cloudX10', 0, this.clouds);
+        // trigger.body.setSize(48, 48, 0, 0);
+	     // trigger.anchor.setTo(0.5, 0.5);
+      }
+      // this.reverseEnemyTriggers.setAll('body.allowGravity', false);
+      
+      this.clouds.createMultiple(10, 'cloudX10');
+      // this.clouds.setAll('anchor.x', 0.5);
+      // this.clouds.setAll('anchor.y', 0.5);
+      // this.clouds.setAll('outOfBoundsKill', true);
+      this.clouds.setAll('checkWorldBounds', true);
+      this.clouds.setAll('body.allowGravity', false);
+      this.clouds.setAll('body.immovable', true);
+    }
+    
+    this.setupPlayer();
+    player = this.player;
     this.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
     
-    if (this.mapisSky === false)
+    if (this.mapIsSky === false && this.mapIsNewSky === false)
     {
       this.setupForegroundLayers();
     }
     
-    this.clouds = this.add.group();
-    this.clouds.enableBody = true;
-    this.clouds.physicsBodyType = Phaser.Physics.ARCADE;
+    // this.clouds = this.add.group();
+    // this.clouds.enableBody = true;
+    // this.clouds.physicsBodyType = Phaser.Physics.ARCADE;
     
-    this.clouds.createMultiple(50, 'cloud1');
-    this.clouds.setAll('anchor.x', 0.5);
-    this.clouds.setAll('anchor.y', 0.5);
-    this.clouds.setAll('outOfBoundsKill', true);
-    this.clouds.setAll('checkWorldBounds', true);
+    // this.clouds.createMultiple(50, 'cloud1');
+    // this.clouds.setAll('anchor.x', 0.5);
+    // this.clouds.setAll('anchor.y', 0.5);
+    // this.clouds.setAll('outOfBoundsKill', true);
+    // this.clouds.setAll('checkWorldBounds', true);
     
     // This triggers the clouds
     // this.time.events.repeat(Phaser.Timer.SECOND * 3, 10, this.addCloud, this);
+    
+    // Music stuff
+    // this.bgm = this.add.audio('creepySong');
+    // this.bgm.play();
+    this.skyLoop1 = this.add.audio('skyLoop1');
     
     this.setupMagic();
     
@@ -126,23 +275,65 @@ BalanceGame.Game.prototype = {
     
     this.drawGUI();
     
+    playerLoc = this.add.sprite(0,0,null);
+    game = this.game;
     
+    this.fadeIn(2000);
 	},
 
 	update: function () {
-	  this.game.physics.arcade.collide(this.player, this.layerC);
-	  this.game.physics.arcade.collide(this.orbs, this.layerC);
-	  this.game.physics.arcade.collide(this.doors, this.layerC);
-	  this.game.physics.arcade.overlap(this.player, this.orbs, this.collectOrb, null, this);
-	  this.game.physics.arcade.overlap(this.player, this.doors, this.finishLevel, null, this);
-	 //this.game.physics.arcade.collide(this.player, this.doors);
+	  if (this.mapIsNewSky === false)
+	  {
+  	  this.game.physics.arcade.collide(this.player, this.layerC);
+  	  this.game.physics.arcade.collide(this.orbs, this.layerC);
+  	  this.game.physics.arcade.collide(this.doors, this.layerC);
+  	  this.game.physics.arcade.overlap(this.player, this.orbs, this.collectOrb, null, this);
+  	  this.game.physics.arcade.overlap(this.player, this.doors, this.finishLevel, null, this);
+  	 //this.game.physics.arcade.collide(this.player, this.doors);
+  	 
+  	  this.game.physics.arcade.collide(this.enemiesGroup, this.layerC);
+	  }
+	  else
+	  {
+  	  this.game.physics.arcade.collide(this.player, this.clouds);
+  	  
+  	 // var needClouds = false;
+  	 // var cloudCount = 0;
+  	  this.clouds.forEach(function(cloud){
+  	    if (cloud.x+640 < player.x-740)
+  	    {
+  	      cloud.x = cloud.x+1380;
+  	    } else if (cloud.x > player.x+140) {
+  	      cloud.x = cloud.x-1380;
+  	    }
+  	   // else if (needClouds === false && cloud.x < (player.x+1300))
+  	   // {
+  	     // var newCloud = clouds.getFirstDead();
+  	     // newCloud.reset(player.x+1300, 0);
+  	     //var newCloud = t.add.sprite(cloud.x + 1280, 160, 'cloudX10', 0, clouds);
+  	     
+  	   // }
+  	  });
+  	 // if (cloudCount < 20)
+  	 // {
+  	 //   var newCloud = t.add.sprite(player.x + 1280, 160, 'cloudX10', 0, clouds);
+  	 // }
+	  }
+	 // this.game.physics.arcade.overlap(this.player, this.reverseEnemyTriggers, this.finishLevel, null, this);
+	 
     
     this.movePlayer();
+    
+    playerLoc.x = this.player.x;
+    playerLoc.y = this.player.y;
+    
     this.updateLightning();
+    
+    this.enemiesGroup.forEach(game.moveEnemy(this));
     
     if (BalanceGame.playerInfo.health === 0)
     {
-      this.finishLevel(0);;
+      this.finishLevel(0);
     }
     
     if (this.input.keyboard.isDown(Phaser.Keyboard.L))
@@ -197,6 +388,19 @@ BalanceGame.Game.prototype = {
     }
 	},
 	
+	moveEnemy: function (enemy) {
+	  this.physics.arcade.moveToObject(enemy, playerLoc, 60);
+	},
+	
+	hurtPlayerAndExplode: function(player, enemy) {
+	  BalanceGame.playerInfo.health -= this.rnd.integerInRange(1,20);
+	  enemy.kill();
+	  if(BalanceGame.playerInfo.health < 0)
+	  {
+	    BalanceGame.playerInfo.health = 0;
+	  }
+	},
+	
 	pauseUpdate: function () {
 	  // this is a seperate update the ticks when game.paused = true
     // call an input to unpause in phaser here
@@ -220,6 +424,9 @@ BalanceGame.Game.prototype = {
     this.JUMP_SPEED = -350; // pixels/second (remember negative y is up)
     
 	  this.player = this.add.sprite(64, 64, 'player');
+	  
+	  player = this.player;
+	  
 	  this.player.animations.add('stand_right', [1], 6, true);
 	  this.player.animations.add('stand_left', [0], 6, true);
 	  this.player.animations.add('run_right', [4, 2, 5, 3], 6, true);
@@ -260,7 +467,7 @@ BalanceGame.Game.prototype = {
 	
 	setupCollisionLayer: function () {
 	  this.layerC = this.map.createLayer('Collision');
-	  if (this.mapisSky === false)
+	  if (this.mapIsSky === false)
 	  {
       this.map.setCollisionBetween(3, 4, true, this.layerC);
       this.map.setCollision(1, true, this.layerC);
@@ -278,6 +485,11 @@ BalanceGame.Game.prototype = {
 	setupForegroundLayers: function () {
 	  this.layerF1 = this.map.createLayer('Foreground1');
     this.layerF2 = this.map.createLayer('Foreground2');
+	},
+	
+	addReverseTrigger: function(location) {
+	  var trigger = this.add.sprite(location.body.x, location.body.y, null, 0, this.reverseEnemyTriggers);
+	  trigger.anchor.setTo(0.5, 0.5);
 	},
 	
 	// UPDATE FUNCTIONS
@@ -299,8 +511,8 @@ BalanceGame.Game.prototype = {
     }
     
     // Set a variable that is true when the player is touching the ground
-    // var onTheGround = this.player.body.touching.down;
-    var onTheGround = this.player.body.onFloor();
+    var onTheGround = this.player.body.touching.down;
+    // var onTheGround = this.player.body.onFloor();
     if (onTheGround) { this.canDoubleJump = true; }
 
     if (this.upInputIsActive(5)) {
@@ -359,6 +571,11 @@ BalanceGame.Game.prototype = {
       } else {
         this.player.animations.play('stand_left');
       }
+    }
+    
+    if (this.player.y > 2000)
+    {
+      BalanceGame.playerInfo.health -= 5;
     }
 	},
 	
@@ -592,9 +809,12 @@ BalanceGame.Game.prototype = {
 	 //   }
 	 // }
 	  
-	  this.healthBar.scale.setTo(
-	    BalanceGame.playerInfo.health/BalanceGame.playerInfo.maxHealth, 1);
-	    
+	  if (BalanceGame.playerInfo.health >= 0)
+	  {
+  	  this.healthBar.scale.setTo(
+  	    BalanceGame.playerInfo.health/BalanceGame.playerInfo.maxHealth, 1);
+	  }
+	  
 	  
 	},
 	
@@ -745,13 +965,13 @@ BalanceGame.Game.prototype = {
     this.lightning.rotation =
         this.game.math.angleBetween(
             this.lightning.x, this.lightning.y,
-            this.game.input.activePointer.x, this.game.input.activePointer.y
+            this.game.input.activePointer.x+this.camera.x, this.game.input.activePointer.y+this.camera.y
         ) - Math.PI/2;
 
     // Calculate the distance from the lightning source to the pointer
     var distance = this.game.math.distance(
             this.lightning.x, this.lightning.y,
-            this.game.input.activePointer.x, this.game.input.activePointer.y
+            this.game.input.activePointer.x+this.camera.x, this.game.input.activePointer.y+this.camera.y
         );
 
     // Create the lightning texture
@@ -761,7 +981,6 @@ BalanceGame.Game.prototype = {
     this.lightning.alpha = 1;
 
     // Fade out the lightning sprite using a tween on the alpha property.
-    // Check out the "Easing function" examples for more info.
     this.game.add.tween(this.lightning)
         .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
         .to({ alpha: 1.0 }, 100, Phaser.Easing.Bounce.Out)
@@ -787,14 +1006,10 @@ BalanceGame.Game.prototype = {
       this.player.body.allowGravity = false;
       this.player.x = this.game.input.activePointer.x;
       this.player.y = this.game.input.activePointer.y;
-      // this.player.body.applyForce([
-      //   this.game.input.activePointer.x - this.player.x,
-      //   this.game.input.activePointer.y - this.player.y
-      //   ], this.player.x, this.player.y);
       // this.player.body.velocity.x = (this.game.input.activePointer.x - this.player.x) * 1000;
       // this.player.body.velocity.y = (this.game.input.activePointer.y - this.player.y) * 1000;
       
-      this.time.events.add(500, this.resetGravity, this);
+      this.time.events.add(400, this.resetGravity, this);
     }
     else
     {
@@ -903,8 +1118,33 @@ BalanceGame.Game.prototype = {
 	// LEVEL SWITCHING FUNCTIONS
 	
 	finishLevel: function (door) {
-	  BalanceGame.gameInfo.currentLevel++;
-	  this.state.start('LevelManager', this, door);
+	  if(this.levelIsOver === false)
+	  {
+  	  BalanceGame.gameInfo.currentLevel++;
+  	  BalanceGame.playerInfo.lastDoor = door;
+  	  this.levelIsOver === true;
+  	  this.fadeOut(2000);
+  	  // TODO: fix this so things fade out well
+  	 // this.time.events.add(Phaser.Timer.SECOND * 2, this.switchLevel, this);
+	    this.state.start('LevelManager', this);
+	  }
+	},
+	
+	switchLevel: function () {
+	},
+	
+	fadeIn: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 1;
+    this.add.tween(blackScreen).to( { alpha: 0 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
+	},
+	
+	fadeOut: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 0;
+    this.add.tween(blackScreen).to( { alpha: 1 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
 	},
 	
 	quitGame: function (pointer) {

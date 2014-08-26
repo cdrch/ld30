@@ -40,6 +40,20 @@ BalanceGame.MainMenu.prototype = {
     // brings menuGroup into view
     this.game.add.tween(this.menuGroup).to({y:0}, 2000, Phaser.Easing.Back.Out, true);
 	},
+	
+	fadeIn: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 1;
+    this.add.tween(blackScreen).to( { alpha: 0 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
+	},
+	
+	fadeOut: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 0;
+    this.add.tween(blackScreen).to( { alpha: 1 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
+	},
 
 	render: function () {
 

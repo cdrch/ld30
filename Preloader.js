@@ -36,9 +36,19 @@ BalanceGame.Preloader.prototype = {
 		this.load.tilemap('skymap2', 'assets/skymap2a.json', null, Phaser.Tilemap.TILED_JSON);
 		this.load.tilemap('skymap3', 'assets/skymap3a.json', null, Phaser.Tilemap.TILED_JSON);
 		this.load.tilemap('skymap5', 'assets/skymap5.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap6', 'assets/skymap6.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap7', 'assets/skymap7.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('skymap8', 'assets/skymap8.json', null, Phaser.Tilemap.TILED_JSON);
 		
-		this.load.audio('creepySong', ['creepy-reverb.mp3']);
+		this.load.audio('creepySong', ['assets/creepy-reverb.mp3']);
+		this.load.audio('skyLoop1', ['assets/Guitar1.mp3','assets/Guitar1.ogg']);
 		
+		this.load.image('testEnemy', 'assets/test-enemy.png');
+		this.load.image('cloudX10', 'assets/cloudX20.png');
+		
+		this.load.image('blackScreen', 'assets/blackScreen.png');
+		
+		this.load.spritesheet('enemy1', 'assets/enemy1a.png', 48, 48);
 
 	},
 
@@ -46,6 +56,20 @@ BalanceGame.Preloader.prototype = {
 
 		this.state.start('MainMenu');
 
+	},
+	
+	fadeIn: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 1;
+    this.add.tween(blackScreen).to( { alpha: 0 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
+	},
+	
+	fadeOut: function (time) {
+    var blackScreen = this.add.sprite(0,0,'blackScreen');
+	  blackScreen.fixedToCamera = true;
+    blackScreen.alpha = 0;
+    this.add.tween(blackScreen).to( { alpha: 1 }, time, Phaser.Easing.Linear.None, true, 0, 0, false);
 	},
 
 	render: function () {
